@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos - Tienda Irvin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <button id="viewCartButton" class="role-button">Ver Carrito</button>
+        <h1 id="welcomeMessage">Bienvenido a Tienda Irvin</h1>
+
+        <!-- Lista de productos -->
+        <h2>Productos Disponibles</h2>
+        <div class="product-list">
+            <!-- Los productos se llenarán dinámicamente con JavaScript -->
+        </div>
+    </div>
+    
+    <footer>
+        <button id="sellButton" class="role-button">Vender Productos</button>
+    </footer>
+
+    <script>
+        document.getElementById('viewCartButton').addEventListener('click', function() {
+            window.location.href = 'carrito.html';
+        });
+
+        document.getElementById('sellButton').addEventListener('click', function() {
+            window.location.href = 'shell.html'; // Asegúrate de que la ruta es correcta
+        });
+
+        // Obtener el nombre del usuario y mostrar el mensaje de bienvenida
+        function setWelcomeMessage() {
+            const user = localStorage.getItem('user');
+            if (user) {
+                const userData = JSON.parse(user);
+                document.getElementById('welcomeMessage').innerText = `Bienvenido, ${userData.nombres} ${userData.apellidos}`;
+            }
+        }
+
+        setWelcomeMessage();
+
+        // Función para obtener y mostrar los productos
+        async function fetchProductos() {
+            try {
+                const res = await fetch('/api/items');
+                const productos = await res.json();
+
+                console.log('Productos recibidos:', productos); // Verificar productos recibidos
+
+                const productListDiv = document.querySelector('.product-list');
+                productListDiv.innerHTML = '';
+
+                if (!Array.isArray(productos)) {
+                    productListDiv.innerHTML = '<p>Error al obtener productos. Intenta nuevamente.</p>';
+                    return;
+                }
+
+                if (productos.length === 0) {
+                    productListDiv.innerHTML = '<p>No hay productos disponibles.</p>';
+                } else {
+                    productos.forEach(producto => {
+                        const productDiv = document.createElement('div');
+                        productDiv.classList.add('product');
+
+                        productDiv.innerHTML = `
+                            <h3>${producto.nombre}</h3>
+                            <p><strong>Precio:</strong> $${producto.precio}</p>
+                            <p><strong>Unidades Disponibles:</strong> ${producto.unidades_disponibles}</p>
+                            <p><strong>Características:</strong> ${producto.caracteristicas_js}</p>
+                            <p><strong>Descripción:</strong> ${producto.descripcion}</p>
+                            <p><strong>Fecha de Publicación:</strong> ${producto.fechapublicacion}</p>
+                            <p><strong>Ventas:</strong> ${producto.favoritos}</p>
+                            <button class="add-to-cart-button" data-id="${producto.id}">
+                                <img src="carrito.png" alt="Agregar al Carrito" style="width: 20px; height: 20px;">
+                            </button>
+                        `;
+
+                        productListDiv.appendChild(productDiv);
+                    });
+
+                    // Asignar evento a los botones de agregar al carrito
+                    document.querySelectorAll('.add-to-cart-button').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const productId = this.getAttribute('data-id');
+                            addToCart(productId);
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error al obtener productos:', error);
+                alert('Error al obtener productos. Intenta nuevamente.');
+            }
+        }
+
+        // Función para agregar un producto al carrito
+        function addToCart(productId) {
+            let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            carrito.push(productId);
+            localStorage.setItem('carrito', JSON.stringify(carrito));
+            console.log('Carrito:', carrito);
+        }
+
+        // Llamar a la función para obtener los productos al cargar la página
+        fetchProductos();
+    </script>
+    <iframe src="footer.html" style="width: 100%; height: 500px; border: none;"></iframe>
+</body>
+</html>
